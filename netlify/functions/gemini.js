@@ -1,13 +1,26 @@
-export default async (req) => {
+exports.handler = async function (event) {
   try {
-    if (req.method !== "POST") {
-      return { statusCode: 405, body: "Method Not Allowed" };
+    if (event.httpMethod !== "POST") {
+      return {
+        statusCode: 405,
+        body: "Method Not Allowed",
+      };
     }
 
-    const { message } = JSON.parse(req.body || "{}");
+    // Parse request body safely
+    const body = JSON.parse(event.body || "{}");
+    const message = body.message;
 
     if (!message) {
-      return { statusCode: 400, body: "Message missing" };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Message is required" }),
+      };
+    }
+
+    // Ensure API key exists
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY not set");
     }
 
     const response = await fetch(
@@ -16,9 +29,7 @@ export default async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            { parts: [{ text: message }] }
-          ]
+          contents: [{ parts: [{ text: message }] }],
         }),
       }
     );
@@ -29,10 +40,14 @@ export default async (req) => {
       statusCode: 200,
       body: JSON.stringify(data),
     };
-  } catch (err) {
+  } catch (error) {
+    console.error("Gemini function error:", error);
+
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({
+        error: error.message || "Internal Server Error",
+      }),
     };
   }
 };
