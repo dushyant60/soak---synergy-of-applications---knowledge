@@ -33,12 +33,12 @@ export const Contact = () => {
                 <div className="space-y-4">
                 <div>
                     <h4 className="text-white font-medium mb-1">Email</h4>
-                    <a href="mailto:hello@soak.tech" className="hover:text-teal-400 transition-colors">hello@soak.tech</a>
+                    <a href="mailto:dshyntsngh60@gmail.com" className="hover:text-teal-400 transition-colors">dshyntsngh60@gmail.com</a>
                 </div>
-                <div>
+                {/* <div>
                     <h4 className="text-white font-medium mb-1">Office</h4>
                     <p>123 Innovation Dr, Suite 400<br/>Tech City, TC 90210</p>
-                </div>
+                </div> */}
                 </div>
             </Reveal>
           </div>
@@ -94,8 +94,8 @@ export const Contact = () => {
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
           <p>&copy; {new Date().getFullYear()} SOAK Agency. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            {/* <a href="#" className="hover:text-white transition-colors">Privacy Policy</a> */}
+            {/* <a href="#" className="hover:text-white transition-colors">Terms of Service</a> */}
           </div>
         </div>
       </div>
