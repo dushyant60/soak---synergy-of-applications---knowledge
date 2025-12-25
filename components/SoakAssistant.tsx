@@ -5,6 +5,8 @@ import {
   SendIcon,
   SparklesIcon,
 } from "./Icons";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ChatMessage } from "../types";
 
 export const SoakAssistant = () => {
@@ -136,7 +138,39 @@ export const SoakAssistant = () => {
                       : ""
                   }`}
                 >
-                  {msg.text}
+                  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      strong: ({ node, ...props }) => (
+        <strong className="font-semibold text-slate-900 dark:text-white" {...props} />
+      ),
+      p: ({ node, ...props }) => (
+        <p className="mb-2 last:mb-0" {...props} />
+      ),
+      ul: ({ node, ...props }) => (
+        <ul className="list-disc ml-4 mb-2" {...props} />
+      ),
+      li: ({ node, ...props }) => (
+        <li className="mb-1" {...props} />
+      ),
+      h1: ({ node, ...props }) => (
+        <h1 className="text-lg font-bold mb-2" {...props} />
+      ),
+      h2: ({ node, ...props }) => (
+        <h2 className="text-base font-semibold mb-2" {...props} />
+      ),
+      code: ({ inline, ...props }: any) =>
+        inline ? (
+          <code className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs" {...props} />
+        ) : (
+          <pre className="bg-slate-900 text-white p-3 rounded-lg overflow-x-auto text-xs">
+            <code {...props} />
+          </pre>
+        ),
+    }}
+  >
+    {msg.text}
+  </ReactMarkdown>
                 </div>
               </div>
             ))}
