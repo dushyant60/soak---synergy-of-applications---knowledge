@@ -11,7 +11,9 @@ export const SoakAssistant = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const chatSessionRef = useRef<Chat | null>(null);
+  // Allow storing either a full Chat instance or a lightweight session object returned
+  // by createChatSession (e.g. { id: string }) without type errors.
+  const chatSessionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

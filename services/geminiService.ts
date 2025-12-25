@@ -1,51 +1,52 @@
-import { GoogleGenAI, Chat } from "@google/genai";
+// Minimal client wrapper that calls the Netlify function proxy.
+// The Netlify function (/.netlify/functions/gemini) forwards requests to
+// Google's Generative Language API using a private GEMINI_API_KEY.
 
-let client: GoogleGenAI | null = null;
+export type Chat = { id: string } | null;
 
-const getClient = () => {
-  if (!client && process.env.API_KEY) {
-    client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  }
-  return client;
+export const createChatSession = (): Chat => {
+  // We return a lightweight session object. The real session is stateless
+  // for this minimal proxy setup — the Netlify function will be responsible
+  // for forwarding the request to Gemini.
+  return { id: Date.now().toString() };
 };
 
-const SYSTEM_INSTRUCTION = `
-You are the digital assistant for SOAK (Synergy of Applications & Knowledge).
-Your role is to guide visitors, explain SOAK's philosophy, and demonstrate practical AI usage.
-
-SOAK is a tech agency that combines application development with education.
-Core Services:
-1. Digital Enablement & Consulting
-2. Application & Platform Development
-3. Website & Digital Presence
-4. AI Adoption (Practical & Ethical)
-5. Technology Training
-
-Tone: Helpful, honest, clear, concise. Avoid buzzwords.
-If asked about AI, explain it as a tool, not magic.
-If asked for services, ask about their specific needs first.
-Keep responses under 100 words unless detailed explanation is requested.
-`;
-
-export const createChatSession = (): Chat | null => {
-  const ai = getClient();
-  if (!ai) return null;
-
-  return ai.chats.create({
-    model: 'gemini-3-flash-preview',
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.7,
-    },
-  });
-};
-
-export const sendMessageToGemini = async (chat: Chat, message: string): Promise<string> => {
+export const sendMessageToGemini = async (_chat: Chat, message: string): Promise<string> => {
   try {
-    const response = await chat.sendMessage({ message });
-    return response.text || "I'm having trouble thinking of a response right now.";
+    const payload = {
+      // Keep the model name; the Netlify function will forward this body as-is.
+      model: 'gemini-3-flash-preview',
+      // We'll send a simple input structure. The Netlify function forwards
+      // the body directly to the Google endpoint, so you can extend this
+      // payload to match the API shape you prefer.
+      input: [{ content: message }],
+    };
+
+    const res = await fetch('/.netlify/functions/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await res.text();
+    // The Netlify function returns the raw API response text. Preferably
+    // the response should be JSON; we'll attempt to parse it, falling back
+    // to the raw text if parsing fails.
+    try {
+      const json = JSON.parse(text);
+      // Attempt to extract a textual reply if present.
+      if (json?.candidates && json.candidates[0]?.content) {
+        return json.candidates[0].content[0]?.text || JSON.stringify(json);
+      }
+      if (json?.output?.[0]?.content?.[0]?.text) {
+        return json.output[0].content[0].text;
+      }
+      return JSON.stringify(json);
+    } catch (e) {
+      return text;
+    }
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error('Gemini Proxy Error:', error);
     throw error;
   }
 };
